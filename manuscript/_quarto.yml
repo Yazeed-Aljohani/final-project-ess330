@@ -1,5 +1,6 @@
 project:
   type: manuscript
+  output-dir: docs
 
 manuscript:
   article: index.qmd
@@ -10,12 +11,18 @@ format:
       hypothesis: true
   docx: default
   jats: default
-
-  # (other formats)
   # pdf: default
 
 execute:
   freeze: true
 
+title: "Final Project ESS330"
+author:
+  - name: "Yazeed Aljohani"
+    email: "yazeed21@colostate.edu"
+    corresponding: true
+  - name: "Josh Puyear"
+  - name: "Cade Vanek"
 
-
+bibliography: references.bib
+csl: apa.csl
