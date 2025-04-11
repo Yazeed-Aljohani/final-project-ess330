@@ -10,6 +10,10 @@ author:
     affiliation: "Colorado State University"
 ---
 
+
+
+
+
 # Introduction, Background, and Motivation
 
 The COVID-19 pandemic drastically changed the way people lived, worked, and moved, especially during the early lockdown period in 2020. Globally, one of the most significant consequences of these behavioral shifts was a sharp and sudden drop in greenhouse gas (GHG) emissions, particularly carbon dioxide (CO₂) emissions from fossil fuels. According to Liu et al. (2020), global fossil CO₂ emissions declined by approximately 7.8% in the early months of the pandemic (\@liu2020covid). This decrease was driven largely by transportation sectors, as road transport emissions dropped by about 15.5% and aviation emissions declined by nearly 29%. These reductions were felt across continents, including in China, Europe, and the United States (\@forster2020current).
@@ -34,6 +38,10 @@ In conclusion, by combining emissions data from the EPA’s NEI with behavioral 
 
 # 
 
+
+
+
+
 ```{r}
 library(tidyverse)
 library(sf)
@@ -45,9 +53,17 @@ options(tigris_use_cache = TRUE)
 
 ```
 
+
+
+
+
 The first dataset is an EPA summary of various pollutants organized geographically. For our purposes, we will be only analyzing the CO2 measurements. The second set is google mobility data taken during the COVID-19 pandemic, measuring how different counties increased or decreased transportation frequency and usage.
 
 cleaning:
+
+
+
+
 
 ```{r}
 
@@ -71,7 +87,15 @@ mobility_data <- read_csv("data/mobility_data.csv") %>%
 
 ```
 
+
+
+
+
 # 
+
+
+
+
 
 ```{r}
 joined_data <- co2_data %>%
@@ -87,7 +111,15 @@ map_data <- us_counties %>%
 
 ```
 
+
+
+
+
 Plotting the data:
+
+
+
+
 
 ```{r}
 map_co2 <- ggplot(map_data) +
@@ -113,9 +145,17 @@ map_co2 + map_mobility +
 
 ```
 
+
+
+
+
 t test:
 
 This suggests that CO2 levels and mobility are highly interrelated.
+
+
+
+
 
 ```{r}
 
@@ -132,9 +172,17 @@ t_test_result
 
 ```
 
+
+
+
+
 lin reg:
 
 this test further supports the idea that CO2 emissions were a significant predictor of mobility during 2020.
+
+
+
+
 
 ```{r}
 model <- lm(avg_residential ~ Emissions_Tons, data = joined_data)
@@ -144,6 +192,11 @@ summary(model)
 
 ```
 
+
+
+
+
 # Methods Identified
 
 Will be added soon
+
