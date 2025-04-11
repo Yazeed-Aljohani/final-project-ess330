@@ -7,13 +7,14 @@ author:
   - name: "Josh Puyear"
     affiliation: "Colorado State University"
   - name: "Cade Vanek"
+    affiliation: "Colorado State University"
 ---
 
 # Introduction, Background, and Motivation
 
-The COVID-19 pandemic drastically changed the way people lived, worked, and moved, especially during the early lockdown period in 2020. Globally, one of the most significant consequences of these behavioral shifts was a sharp and sudden drop in greenhouse gas (GHG) emissions, particularly carbon dioxide (CO₂) emissions from fossil fuels. According to Liu et al. (2020), global fossil CO₂ emissions declined by approximately 7.8% in the early months of the pandemic (liu2020). This decrease was driven largely by transportation sectors, as road transport emissions dropped by about 15.5% and aviation emissions declined by nearly 29%. These reductions were felt across continents, including in China, Europe, and the United States (forster2020).
+The COVID-19 pandemic drastically changed the way people lived, worked, and moved, especially during the early lockdown period in 2020. Globally, one of the most significant consequences of these behavioral shifts was a sharp and sudden drop in greenhouse gas (GHG) emissions, particularly carbon dioxide (CO₂) emissions from fossil fuels. According to Liu et al. (2020), global fossil CO₂ emissions declined by approximately 7.8% in the early months of the pandemic (\@liu2020covid). This decrease was driven largely by transportation sectors, as road transport emissions dropped by about 15.5% and aviation emissions declined by nearly 29%. These reductions were felt across continents, including in China, Europe, and the United States (\@forster2020current).
 
-Transportation is the largest source of greenhouse gas emissions in the United States, accounting for nearly 29% of total emissions (epa2022). Within urban environments, where population density and economic activity are centered, the contribution of transportation to local carbon footprints is often even greater. As cities tussle with climate change and look for strategies to lower emissions, understanding how transportation emissions responded to reduced human activity during COVID-19 becomes an important starting point. Did cities with more public transportation infrastructure see greater drops in emissions? Were some cities more resilient to emissions rebounds in 2021–2022? These are the kinds of questions our project aims to explore.
+Transportation is the largest source of greenhouse gas emissions in the United States, accounting for nearly 29% of total emissions (\@epa2022). Within urban environments, where population density and economic activity are centered, the contribution of transportation to local carbon footprints is often even greater. As cities tussle with climate change and look for strategies to lower emissions, understanding how transportation emissions responded to reduced human activity during COVID-19 becomes an important starting point. Did cities with more public transportation infrastructure see greater drops in emissions? Were some cities more resilient to emissions rebounds in 2021–2022? These are the kinds of questions our project aims to explore.
 
 This project focuses on analyzing transportation-related carbon emissions in five major U.S. counties (Los Angeles County, Cook County, Harris County, San Francisco County, and King County) from 2019 through 2022. These counties were selected based on their large populations, diverse transportation infrastructure, and the availability of emissions and mobility data. By comparing emissions across three key periods: pre-pandemic (2019), pandemic lockdown (2020), and post-lockdown recovery (2021–2022). We aim to better understand how transportation behavior affects regional emissions and how these patterns can inform future urban planning and climate policies.
 
@@ -144,3 +145,5 @@ summary(model)
 ```
 
 # Methods Identified
+
+Will be added soon
