@@ -40,6 +40,9 @@ library(sf)
 library(tigris)
 library(ggplot2)
 library(patchwork)  
+library(maps)
+library(usdata)
+library(rmapshaper)
 
 options(tigris_use_cache = TRUE)
 
@@ -50,14 +53,11 @@ The first dataset is an EPA summary of various pollutants organized geographical
 cleaning:
 
 ```{r}
-
-
 co2_data <- read_csv("data/co2_emissions.csv") %>%
   mutate(
     FIPS = str_pad(FIPS, 5, pad = "0"),
     Emissions_Tons = `Emissions (Tons)`
   )
-
 
 mobility_data <- read_csv("data/mobility_data.csv") %>%
   mutate(
@@ -67,7 +67,6 @@ mobility_data <- read_csv("data/mobility_data.csv") %>%
   summarize(
     avg_residential = mean(residential_percent_change_from_baseline, na.rm = TRUE)
   )
-
 
 ```
 
@@ -83,32 +82,56 @@ us_counties <- counties(cb = TRUE, class = "sf") %>%
 map_data <- us_counties %>%
   left_join(joined_data, by = "FIPS")
 
-
-
 ```
 
 Plotting the data:
 
 ```{r}
+
+# Define US bounding box (continental US)
+
+
+us_bbox <- c(
+  xmin = -125,  # West longitude
+  xmax = -66,    # East longitude
+  ymin = 24,     # South latitude
+  ymax = 50      # North latitude
+)
+
 map_co2 <- ggplot(map_data) +
   geom_sf(aes(fill = Emissions_Tons), color = NA) +
   scale_fill_viridis_c(option = "plasma", trans = "log10", na.value = "grey90") +
+    coord_sf(
+    xlim = c(us_bbox["xmin"], us_bbox["xmax"]),  # Longitude bounds
+    ylim = c(us_bbox["ymin"], us_bbox["ymax"]),  # Latitude bounds
+    expand = FALSE  # Remove padding
+  ) +
   labs(title = "CO₂ Emissions (Tons)", fill = "Emissions") +
   theme_minimal()
 
+map_co2 <- ms_simplify(map_co2, keep = 0.1)
+
+# Plot with zoom
 map_mobility <- ggplot(map_data) +
   geom_sf(aes(fill = avg_residential), color = NA) +
   scale_fill_viridis_c(option = "cividis", na.value = "grey90") +
+  coord_sf(
+    xlim = c(us_bbox["xmin"], us_bbox["xmax"]),  # Longitude bounds
+    ylim = c(us_bbox["ymin"], us_bbox["ymax"]),  # Latitude bounds
+    expand = FALSE  # Remove padding
+  ) +
   labs(title = "Avg. Residential Mobility Change", fill = "% Change") +
   theme_minimal()
 
-map_co2 + map_mobility +
+map_co2 <- ms_simplify(map_mobility, keep = 0.1)
+
+
+co2_mob <- map_co2 + map_mobility +
   plot_layout(ncol = 2) +
   plot_annotation(title = "County-Level CO₂ Emissions vs. Mobility Change")
 
-map_co2 + map_mobility +
-  plot_layout(ncol = 2) +
-  plot_annotation(title = "County-Level CO₂ Emissions vs. Mobility Change")
+
+
 
 
 ```
@@ -119,6 +142,8 @@ This suggests that CO2 levels and mobility are highly interrelated.
 
 ```{r}
 
+#This code is categorizing emissions into the categroies of high and low. Why? Why is an unpaired t-test performed? Why don't we have an f-test to test for variance first?
+
 joined_data <- joined_data %>%
   mutate(emissions_group = if_else(Emissions_Tons > median(Emissions_Tons, na.rm = TRUE), "High", "Low"))
 
@@ -126,10 +151,6 @@ joined_data <- joined_data %>%
 t_test_result <- t.test(avg_residential ~ emissions_group, data = joined_data)
 
 t_test_result
-
-
-
-
 ```
 
 lin reg:
@@ -141,8 +162,19 @@ model <- lm(avg_residential ~ Emissions_Tons, data = joined_data)
 
 summary(model)
 
+print(model)
+
 
 ```
+```{r, echo = TRUE}
+library(ggplot2)
+
+ggscatter(joined_data, x = date, y = emissionsmo)
+
+```
+
+
+
 
 # Methods Identified
 
