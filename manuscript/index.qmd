@@ -42,7 +42,7 @@ library(ggplot2)
 library(patchwork)  
 library(maps)
 library(usdata)
-library(rmapshaper)
+library(ggpubr)
 
 options(tigris_use_cache = TRUE)
 
@@ -51,111 +51,91 @@ options(tigris_use_cache = TRUE)
 The first dataset is an EPA summary of various pollutants organized geographically. For our purposes, we will be only analyzing the CO2 measurements. The second set is google mobility data taken during the COVID-19 pandemic, measuring how different counties increased or decreased transportation frequency and usage.
 
 cleaning:
-
+Mobility data are only from 2022, so it would be hard to compare against timeseries emissions data.
 ```{r}
+# This dataset is also only for one year and gets a summary of CO2 emissions, primary through quaternary sources of emissions, other data
+
 co2_data <- read_csv("data/co2_emissions.csv") %>%
   mutate(
-    FIPS = str_pad(FIPS, 5, pad = "0"),
-    Emissions_Tons = `Emissions (Tons)`
-  )
+   FIPS = str_pad(FIPS, 5, pad = "0"),
+  Emissions_Tons = `Emissions (Tons)`
+ )
 
+# Mobility data are only from 2022, so it would be hard to compare against timeseries emissions data.
 mobility_data <- read_csv("data/mobility_data.csv") %>%
   mutate(
     FIPS = str_pad(census_fips_code, 5, pad = "0")
   ) %>%
   group_by(FIPS) %>%
   summarize(
-    avg_residential = mean(residential_percent_change_from_baseline, na.rm = TRUE)
+   avg_residential = mean(residential_percent_change_from_baseline, na.rm = TRUE)
   )
-
 ```
 
-# 
-
+Joining the previously considered data by fips
 ```{r}
 joined_data <- co2_data %>%
-  inner_join(mobility_data, by = "FIPS")
+ inner_join(mobility_data, by = "FIPS")
+  
 
 us_counties <- counties(cb = TRUE, class = "sf") %>%
-  mutate(FIPS = paste0(STATEFP, COUNTYFP))
+ mutate(FIPS = paste0(STATEFP, COUNTYFP))
 
 map_data <- us_counties %>%
-  left_join(joined_data, by = "FIPS")
-
+left_join(joined_data, by = "FIPS")
 ```
 
-Plotting the data:
-
+Plotting the data with a map (this takes a lot of memory)
 ```{r}
-
 # Define US bounding box (continental US)
+#this generated a file that was 1.4 GB, far to large to be practical to run
 
-
-us_bbox <- c(
-  xmin = -125,  # West longitude
-  xmax = -66,    # East longitude
-  ymin = 24,     # South latitude
-  ymax = 50      # North latitude
-)
-
-map_co2 <- ggplot(map_data) +
-  geom_sf(aes(fill = Emissions_Tons), color = NA) +
-  scale_fill_viridis_c(option = "plasma", trans = "log10", na.value = "grey90") +
-    coord_sf(
-    xlim = c(us_bbox["xmin"], us_bbox["xmax"]),  # Longitude bounds
-    ylim = c(us_bbox["ymin"], us_bbox["ymax"]),  # Latitude bounds
-    expand = FALSE  # Remove padding
-  ) +
-  labs(title = "CO₂ Emissions (Tons)", fill = "Emissions") +
-  theme_minimal()
-
-map_co2 <- ms_simplify(map_co2, keep = 0.1)
+# map_co2 <- ggplot(map_data) +
+  # geom_sf(aes(fill = Emissions_Tons), color = NA) +
+ # scale_fill_viridis_c(option = "plasma", trans = "log10", na.value = "grey90") +
+  #  coord_sf(
+  #  xlim = c(us_bbox["xmin"], us_bbox["xmax"]),  # Longitude bounds
+   # ylim = c(us_bbox["ymin"], us_bbox["ymax"]),  # Latitude bounds
+#expand = FALSE  # Remove padding
+#  ) +
+#  labs(title = "CO₂ Emissions (Tons)", fill = "Emissions") +
+#  theme_minimal()
 
 # Plot with zoom
-map_mobility <- ggplot(map_data) +
-  geom_sf(aes(fill = avg_residential), color = NA) +
-  scale_fill_viridis_c(option = "cividis", na.value = "grey90") +
-  coord_sf(
-    xlim = c(us_bbox["xmin"], us_bbox["xmax"]),  # Longitude bounds
-    ylim = c(us_bbox["ymin"], us_bbox["ymax"]),  # Latitude bounds
-    expand = FALSE  # Remove padding
-  ) +
-  labs(title = "Avg. Residential Mobility Change", fill = "% Change") +
-  theme_minimal()
+# map_mobility <- ggplot(map_data) +
+ # geom_sf(aes(fill = avg_residential), color = NA) +
+ # scale_fill_viridis_c(option = "cividis", na.value = "grey90") +
+ # coord_sf(
+ #   xlim = c(us_bbox["xmin"], us_bbox["xmax"]),  # Longitude bounds
+  #  ylim = c(us_bbox["ymin"], us_bbox["ymax"]),  # Latitude bounds
+#    expand = FALSE  # Remove padding
+#  ) +
+#  labs(title = "Avg. Residential Mobility Change", fill = "% Change") +
+#  theme_minimal()
 
-map_co2 <- ms_simplify(map_mobility, keep = 0.1)
-
-
-co2_mob <- map_co2 + map_mobility +
-  plot_layout(ncol = 2) +
-  plot_annotation(title = "County-Level CO₂ Emissions vs. Mobility Change")
-
-
-
-
+# co2_mob <- map_co2 + map_mobility +
+#  plot_layout(ncol = 2) +
+#  plot_annotation(title = "County-Level CO₂ Emissions vs. Mobility Change")
 
 ```
 
-t test:
-
+t test(previously considered data):
 This suggests that CO2 levels and mobility are highly interrelated.
-
 ```{r}
-
-#This code is categorizing emissions into the categroies of high and low. Why? Why is an unpaired t-test performed? Why don't we have an f-test to test for variance first?
+#This code is categorizing emissions into the categoroies of high and low. Why? Why is an unpaired t-test performed? Why don't we have an f-test to test for variance first?
 
 joined_data <- joined_data %>%
-  mutate(emissions_group = if_else(Emissions_Tons > median(Emissions_Tons, na.rm = TRUE), "High", "Low"))
-
+ mutate(emissions_group = if_else(Emissions_Tons >  median(Emissions_Tons, na.rm = TRUE), "High", "Low")) %>% 
+  mutate(log_tons = log(Emissions_Tons))
+  
 
 t_test_result <- t.test(avg_residential ~ emissions_group, data = joined_data)
 
 t_test_result
+
 ```
 
-lin reg:
-
-this test further supports the idea that CO2 emissions were a significant predictor of mobility during 2020.
+Linear regression shows a relationship between CO2 emissions (undated) and mobility in 2022
 
 ```{r}
 model <- lm(avg_residential ~ Emissions_Tons, data = joined_data)
@@ -164,18 +144,132 @@ summary(model)
 
 print(model)
 
+#from lecture 9, plts residuals vs leverage
+plot(model, which = 5)
 
-```
-```{r, echo = TRUE}
+ggboxplot(joined_data$log_tons)
+gghistogram(joined_data$log_tons)
+
+gghistogram(joined_data$avg_residential)
+
 library(ggplot2)
 
-ggscatter(joined_data, x = date, y = emissionsmo)
+#create scatterplot with fitted regression line
+ggplot(model, aes(x = Emissions_Tons, y = avg_residential)) + 
+  geom_point() +
+  stat_smooth(method = "lm")
+
+#I was trying to find out why some of the average emissions values were negative to see if it made sense, but I couldn't determine maximum emissions because there was NaN in the columns.
+
+joined_data %>% 
+  arrange(avg_residential, na.rm = TRUE) %>% 
+  head()
 
 ```
 
 
 
+# EDA for Country Data
+
+```{r, echo = TRUE}
+library(readr)
+
+country_co2 <- read_csv('data/owid-co2-data.csv')
+
+country_info <- read_csv('data/owid-co2-codebook.csv')
+
+```
+# Country CO2 EDA
+```{r, echo = TRUE}
+library(visdat)
+library(ggplot2)
+library(ggpubr)
+library(visdat)
+library(dplyr)
+
+names(country_co2)
+# We're most concerned with the columns country, year, iso_code, population, gdp, co2, total_ghg, oil_co2_per_capita, co2_per_capita, share_global_co2, and energy_per_capita
+
+View(country_info)
+```
+
+# Five most populous countries with population
+```{r, echo = TRUE}
+country_co2 %>% 
+  arrange(-population) %>% 
+  filter(!is.na(iso_code)) %>% 
+  select(population, year, country, iso_code) %>% 
+  filter(year == 2023) %>% 
+  head()
+
+```
 
 # Methods Identified
+```{r, echo = TRUE}
+country_co2_75yr <- country_co2 %>% 
+  select(country, year, iso_code, population, gdp, co2, total_ghg, oil_co2_per_capita, co2_per_capita, share_global_co2, energy_per_capita, ghg_excluding_lucf_per_capita) %>% 
+  filter(year > 1950) %>% 
+  filter(iso_code %in% c('IND', 'CHN', 'IDN', 'PAK', 'USA'))
+  
+vis_dat(country_co2_75yr)
+
+#The combined population of the five most populous countries is 4.3 billion people.
+#These countries are India, China, United States, Indonesia, and Pakistan
+```
+there is some missing data, but all of the co2 data are accounted for
+
+```{r, echo = TRUE}
+#make a combined plot of the top 5 most populous countries
+
+# Check distribution of CO2 emitters across countries in the last 75 years
+#narrow it down to the timeframe of 2015 to 2023 for context in the top 5 CO2 emitters
+
+```
+
+```{r, echo = TRUE}
+#scatterplots- # make a combined polot of the top 5 CO2 emitters
+
+```
+
+```{r, echo = TRUE}
+#rrange histograms and boxplots of data
+
+```
+
+```{r, echo = TRUE}
+#plot a relationship between CO2 and mobility- we are looking at a classifying model if we go with modeling, although now that we've taken timeseries data a predictive model might be the way to go.
+```
+
+```{r, echo = TRUE}
+summary(country_co2)
+
+table(country_co2)
+
+#measure normality of the distribution among all countries
+
+#we know that there will be an upward trend in all countries across years
+
+```
+
+
+```{r, echo = TRUE}
+#or.test(joined_table, variable and ghg emissions)
+
+# qqplot for normal distribution
+
+```
+
+```{r, echo = TRUE}
+
+#additional question- what were the most predictive variables of total CO2 emissions?
+
+# Were the predictor variables before COVID the same as after COVID?
+
+```
+
+```{r, echo = TRUE}
+
+
+```
 
 Will be added soon
